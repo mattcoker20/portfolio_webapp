@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>macOS Portfolio — SWA</title>
+  <style>
+    :root{--accent:#0ea5e9;--text:#e6edf6;--muted:#9fb1c6;--glass:rgba(255,255,255,.14);--border:rgba(255,255,255,.2);--radius:16px}
+    *{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#0b1220,#091225);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto}
+    .menubar{position:fixed;inset:0 0 auto 0;height:34px;display:flex;align-items:center;gap:10px;padding:0 12px;background:rgba(0,0,0,.35);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);z-index:1000}
+    .menu-right{margin-left:auto;color:var(--muted);font-size:12px}
+    .desktop{position:absolute;inset:34px 0 84px 0;padding:16px}
+    .icon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:14px;max-width:880px}
+    .icon{border:1px solid var(--border);background:var(--glass);backdrop-filter:blur(8px);border-radius:14px;padding:8px;text-align:center;cursor:pointer}
+    .icon:hover{background:rgba(255,255,255,.18)}.icon span{font-size:12px}
+    .dock{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:12px;padding:12px 16px;background:rgba(255,255,255,.18);border:1px solid var(--border);backdrop-filter:blur(12px);border-radius:26px}
+    .dock .btn{border:none;background:transparent;color:var(--text);cursor:pointer}
+    .window{position:absolute;top:90px;left:80px;min-width:360px;max-width:min(920px,92vw);background:linear-gradient(180deg,rgba(255,255,255,.38),rgba(255,255,255,.2));border:1px solid rgba(255,255,255,.35);border-radius:var(--radius);box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden;backdrop-filter:blur(18px)}
+    .titlebar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,.25));border-bottom:1px solid rgba(255,255,255,.3);cursor:move}
+    .traffic{display:flex;gap:8px}.dot{width:12px;height:12px;border-radius:50%}.close{background:#ff5f56}.min{background:#ffbd2e}.max{background:#27c93f}
+    .content{padding:12px;max-height:65vh;overflow:auto}
+    .hidden{display:none}.muted{color:var(--muted)}.btn{background:var(--accent);border:none;color:white;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:600}
+    input[type=file],input[type=text]{width:100%;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.2);color:#0f172a}
+    .card{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);border-radius:14px;padding:12px;margin-bottom:10px}
+    a{color:#0ea5e9}
+  </style>
+</head>
+<body>
+  <div class="menubar">
+    <strong>Portfolio</strong>
+    <div class="menu-right"><span id="clock">--:--</span></div>
+  </div>
+
+  <div class="desktop">
+    <div class="icon-grid">
+      <div class="icon" onclick="openWindow('about')" title="About"><div>🧑‍💻</div><span>About</span></div>
+      <div class="icon" onclick="openWindow('articles')" title="Articles"><div>📰</div><span>Articles</span></div>
+      <div class="icon" onclick="viewCV()" title="Open CV"><div>📄</div><span>Open CV</span></div>
+      <div id="adminIcon" class="icon hidden" onclick="openWindow('admin')" title="Admin"><div>🛠️</div><span>Admin</span></div>
+    </div>
+  </div>
+
+  <div id="about" class="window hidden" style="width:680px">
+    <div class="titlebar" onmousedown="dragStart(event,this.parentElement)">
+      <div class="traffic"><div class="dot close" onclick="closeWindow('about')"></div><div class="dot min"></div><div class="dot max"></div></div>
+      <div><strong>About Me</strong></div>
+    </div>
+    <div class="content">
+      <div class="card">
+        <h2 style="margin:0">Hi, I'm <span id="yourName">Your Name</span></h2>
+        <p class="muted">Signed-in admins can upload a new CV and manage content. Everyone else can view.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="articles" class="window hidden" style="width:840px;left:200px">
+    <div class="titlebar" onmousedown="dragStart(event,this.parentElement)">
+      <div class="traffic"><div class="dot close" onclick="closeWindow('articles')"></div><div class="dot min"></div><div class="dot max"></div></div>
+      <div><strong>Articles</strong></div>
+    </div>
+    <div class="content">
+      <div class="card"><p>Sample article list (static). You can extend this to call /api/articles.</p></div>
+    </div>
+  </div>
+
+  <div id="admin" class="window hidden" style="width:740px;left:440px">
+    <div class="titlebar" onmousedown="dragStart(event,this.parentElement)">
+      <div class="traffic"><div class="dot close" onclick="closeWindow('admin')"></div><div class="dot min"></div><div class="dot max"></div></div>
+      <div><strong>Admin</strong></div>
+    </div>
+    <div class="content">
+      <div class="card">
+        <h3>Upload / replace CV (PDF)</h3>
+        <input id="cvFile" type="file" accept="application/pdf" />
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button class="btn" onclick="uploadCV()">Upload CV</button>
+          <button class="btn" onclick="viewCV()">View current CV</button>
+        </div>
+        <p id="adminMsg" class="muted"></p>
+      </div>
+      <div class="card">
+        <h3>Who am I?</h3>
+        <pre id="whoami" style="white-space:pre-wrap"></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="dock">
+    <button class="btn" onclick="openWindow('about')">About</button>
+    <button class="btn" onclick="openWindow('articles')">Articles</button>
+    <button id="adminDock" class="btn hidden" onclick="openWindow('admin')">Admin</button>
+  </div>
+
+  <script>
+    // --------- window UX ---------
+    function openWindow(id){ const w=document.getElementById(id); w.classList.remove('hidden'); bringToFront(w); }
+    function closeWindow(id){ document.getElementById(id).classList.add('hidden') }
+    let drag={el:null,dx:0,dy:0}; function dragStart(e,el){ drag.el=el; const r=el.getBoundingClientRect(); drag.dx=e.clientX-r.left; drag.dy=e.clientY-r.top; document.addEventListener('mousemove',dragMove); document.addEventListener('mouseup',dragEnd) }
+    function dragMove(e){ if(!drag.el)return; drag.el.style.left=(e.clientX-drag.dx)+'px'; drag.el.style.top=(e.clientY-drag.dy)+'px' }
+    function dragEnd(){ document.removeEventListener('mousemove',dragMove); document.removeEventListener('mouseup',dragEnd); drag.el=null }
+    function bringToFront(win){ let z=100; document.querySelectorAll('.window').forEach(w=>{ const zi=+getComputedStyle(w).zIndex||100; if(zi>z) z=zi }); win.style.zIndex=z+1 }
+    function tickClock(){ const d=new Date(); const p=n=>String(n).padStart(2,'0'); document.getElementById('clock').textContent=p(d.getHours())+':'+p(d.getMinutes()) } setInterval(tickClock,1000); tickClock();
+
+    // --------- auth / roles ---------
+    async function getUser(){
+      try{ const r=await fetch('/.auth/me'); if(!r.ok) return null; const j=await r.json(); return j.clientPrincipal||null }catch{ return null }
+    }
+    async function initAuth(){
+      const me=await getUser();
+      document.getElementById('whoami').textContent = JSON.stringify(me,null,2)||'anonymous';
+      const isAdmin = !!(me && me.userRoles && me.userRoles.includes('admin'));
+      if(isAdmin){ document.getElementById('adminIcon').classList.remove('hidden'); document.getElementById('adminDock').classList.remove('hidden'); }
+    }
+    initAuth();
+
+    // --------- CV viewer ---------
+    async function viewCV(){
+      try{
+        const r = await fetch('/api/files/latest');
+        if(!r.ok){ alert('No CV found yet. Upload from Admin.'); return; }
+        const j = await r.json();
+        window.open(j.url, '_blank');
+      }catch(e){ alert('Error fetching CV.'); }
+    }
+
+    // --------- Admin upload ---------
+    async function uploadCV(){
+      const file = document.getElementById('cvFile').files[0];
+      if(!file){ alert('Choose a PDF file'); return; }
+      const msg = (t)=> document.getElementById('adminMsg').textContent = t;
+      try{
+        msg('Requesting upload URL...');
+        const sign = await fetch('/api/admin/files/sign-upload',{
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ fileName: file.name, contentType: file.type })
+        });
+        if(!sign.ok){ msg('Not authorized or server error.'); return; }
+        const { uploadUrl, blobPath } = await sign.json();
+
+        msg('Uploading to storage...');
+        const put = await fetch(uploadUrl, { method:'PUT', headers:{ 'x-ms-blob-type':'BlockBlob','Content-Type':file.type }, body:file });
+        if(!put.ok){ msg('Upload failed.'); return; }
+
+        msg('Saving metadata...');
+        const commit = await fetch('/api/admin/files/commit',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ blobPath, fileName: file.name, contentType: file.type, published:true }) });
+        if(!commit.ok){ msg('Commit failed.'); return; }
+        const saved = await commit.json();
+        msg('Done! File id: '+saved.id);
+      }catch(e){ msg('Error: '+(e?.message||e)) }
+    }
+  </script>
+</body>
+</html>

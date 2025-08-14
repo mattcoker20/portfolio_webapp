@@ -1,0 +1,52 @@
+{
+  "routes": [
+    {
+      "route": "/admin/*",
+      "allowedRoles": [
+        "admin"
+      ]
+    },
+    {
+      "route": "/api/admin/*",
+      "allowedRoles": [
+        "admin"
+      ]
+    },
+    {
+      "route": "/api/*",
+      "allowedRoles": [
+        "anonymous",
+        "authenticated"
+      ]
+    },
+    {
+      "route": "/*",
+      "allowedRoles": [
+        "anonymous",
+        "authenticated"
+      ]
+    }
+  ],
+  "auth": {
+    "identityProviders": {
+      "github": {
+        "registration": {
+          "enabled": true
+        }
+      },
+      "google": {
+        "registration": {
+          "enabled": true
+        }
+      },
+      "azureActiveDirectory": {
+        "registration": {
+          "openIdIssuer": "common"
+        }
+      }
+    }
+  },
+  "navigationFallback": {
+    "rewrite": "/index.html"
+  }
+}
